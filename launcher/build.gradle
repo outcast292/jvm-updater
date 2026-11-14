@@ -2,6 +2,7 @@ description = 'Supervisor that starts the newest valid release and rolls back on
 
 dependencies {
     implementation project(':core')
+    testImplementation testFixtures(project(':core'))
 }
 
 jar {

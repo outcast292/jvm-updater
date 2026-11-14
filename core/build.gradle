@@ -4,12 +4,6 @@ plugins {
 
 description = 'Signed manifests, release feeds and side-by-side staging for jvm-updater.'
 
-tasks.named('compileJava') {
-    // The launcher module, target of a qualified export, is not on this module's path, and the
-    // module name ends in digits on purpose (it is the GitHub account). Both warnings are expected.
-    options.compilerArgs += '-Xlint:-module'
-}
-
 jar {
     manifest {
         attributes 'Main-Class': 'io.github.outcast292.jvmupdater.cli.Main'

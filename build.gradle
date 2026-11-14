@@ -20,6 +20,9 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
         options.release = 21
+        // Module names end in digits on purpose (they follow the GitHub account), and core
+        // exports its internals to the launcher, which core's compilation can't see.
+        options.compilerArgs += '-Xlint:-module'
     }
 
     tasks.withType(Javadoc).configureEach {
