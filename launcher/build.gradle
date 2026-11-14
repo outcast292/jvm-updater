@@ -1,0 +1,28 @@
+description = 'Supervisor that starts the newest valid release and rolls back on early crashes.'
+
+dependencies {
+    implementation project(':core')
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'io.github.outcast292.jvmupdater.launcher.Supervisor'
+    }
+}
+
+// One jar with the launcher and core, for people who don't use a build tool. It runs on the class
+// path, so the module descriptors are left out.
+def standaloneJar = tasks.register('standaloneJar', Jar) {
+    archiveClassifier = 'all'
+    manifest {
+        attributes 'Main-Class': 'io.github.outcast292.jvmupdater.launcher.Supervisor'
+    }
+    from(sourceSets.main.output) { exclude 'module-info.class' }
+    from({ project(':core').sourceSets.main.output }) { exclude 'module-info.class' }
+}
+
+tasks.named('assemble') {
+    dependsOn standaloneJar
+}
+
+publishing.publications.maven.artifact(standaloneJar)

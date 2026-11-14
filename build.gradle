@@ -1,0 +1,46 @@
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+
+    group = 'io.github.outcast292.jvmupdater'
+    version = rootProject.findProperty('releaseVersion') ?: '0.1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 21
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter:6.1.1'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                artifactId = "jvm-updater-${project.name}"
+                from components.java
+            }
+        }
+    }
+}

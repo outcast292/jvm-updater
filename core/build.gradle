@@ -1,0 +1,7 @@
+description = 'Signed manifests, release feeds and side-by-side staging for jvm-updater.'
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'io.github.outcast292.jvmupdater.cli.Main'
+    }
+}
