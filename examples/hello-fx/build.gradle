@@ -1,0 +1,83 @@
+plugins {
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+version = findProperty('appVersion') ?: '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javafx {
+    version = '21.0.5'
+    modules = ['javafx.controls']
+}
+
+configurations {
+    launcher
+}
+
+dependencies {
+    implementation 'io.github.outcast292.jvmupdater:core'
+    launcher 'io.github.outcast292.jvmupdater:launcher'
+}
+
+// JavaFX jars are built per platform, so a release only runs where it was built.
+def osName = System.getProperty('os.name').toLowerCase()
+def platform = osName.contains('win') ? 'windows' : osName.contains('mac') ? 'mac' : 'linux'
+def runtimeId = "${platform}-${System.getProperty('os.arch')}"
+
+def feedDir = layout.buildDirectory.dir('feed')
+def releaseFiles = layout.buildDirectory.dir('release-files')
+def feedUrl = findProperty('feedUrl') ?: 'http://localhost:8000/'
+
+tasks.register('demoKey', JavaExec) {
+    description = 'Makes demo.key and demo.pub, once.'
+    onlyIf { !file('demo.key').exists() }
+    classpath = configurations.launcher
+    mainClass = 'io.github.outcast292.jvmupdater.cli.Main'
+    args 'keygen', file('demo').absolutePath
+}
+
+def collectFiles = tasks.register('releaseFiles', Sync) {
+    from(tasks.named('jar')) { into 'lib' }
+    from(configurations.runtimeClasspath) { into 'lib' }
+    into releaseFiles
+}
+
+tasks.register('publishRelease', JavaExec) {
+    description = 'Signs this version into build/feed and points latest at it.'
+    dependsOn 'demoKey', collectFiles
+    classpath = configurations.launcher
+    mainClass = 'io.github.outcast292.jvmupdater.cli.Main'
+    args 'publish',
+            '--files', releaseFiles.get().asFile,
+            '--version', version,
+            '--main-module', 'hello/hello.HelloApp',
+            '--runtime', runtimeId,
+            '--jvm-arg', "-Dhello.feed=${feedUrl}",
+            '--key', file('demo.key'),
+            '--feed', feedDir.get().asFile
+}
+
+tasks.register('runWithLauncher', JavaExec) {
+    description = 'Starts the app through the launcher, as an installed app would be.'
+    classpath = configurations.launcher
+    mainClass = 'io.github.outcast292.jvmupdater.launcher.Supervisor'
+    def baseline = findProperty('baselineVersion') ?: '1.0.0'
+    args '--root', layout.buildDirectory.dir('installed').get().asFile,
+            '--baseline', feedDir.get().dir(baseline).asFile,
+            '--public-key', file('demo.pub'),
+            '--runtime', runtimeId,
+            '--prove-after', '20s'
+    if (findProperty('zeroCode')) {
+        args '--feed', feedUrl
+    }
+}

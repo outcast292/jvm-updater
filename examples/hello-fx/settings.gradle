@@ -1,0 +1,4 @@
+rootProject.name = 'hello-fx'
+
+// Builds jvm-updater from this repository instead of downloading it.
+includeBuild('../..')
