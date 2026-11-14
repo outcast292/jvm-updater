@@ -3,7 +3,10 @@ subprojects {
     apply plugin: 'maven-publish'
 
     group = 'io.github.outcast292.jvmupdater'
-    version = rootProject.findProperty('releaseVersion') ?: '0.1.0-SNAPSHOT'
+    // JitPack builds a tag and passes it as VERSION; CI passes -PreleaseVersion.
+    version = rootProject.findProperty('releaseVersion')
+            ?: (System.getenv('JITPACK') ? System.getenv('VERSION') : null)
+            ?: '0.1.0-SNAPSHOT'
 
     repositories {
         mavenCentral()
